@@ -16,12 +16,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
+from os import environ
 
 from click import group
+from dotenv import load_dotenv
+
+from bot.core import Eris
 
 
 async def run_bot() -> None:
-    print("Running bot...")
+    load_dotenv("config/.env")
+
+    token = environ["DISCORD_TOKEN"]
+
+    async with Eris() as bot:
+        await bot.start(token)
 
 
 @group()
