@@ -8,6 +8,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+click = "^8.1.7"
+discord-py = "^2.3.2"
+jishaku = "^2.5.2"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
