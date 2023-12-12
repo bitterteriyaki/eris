@@ -16,9 +16,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from os import environ
+from typing import Any, Type, Union
 
-from discord import Intents
-from discord.ext.commands.bot import Bot  # type: ignore
+from discord import Intents, Interaction, Message
+from discord.ext.commands import Bot, Context  # type: ignore
+from jishaku.modules import find_extensions_in
+
+from bot.utils.context import ErisContext
 
 environ["JISHAKU_NO_UNDERSCORE"] = "true"
 environ["JISHAKU_NO_DM_TRACEBACK"] = "true"
@@ -32,3 +36,19 @@ class Eris(Bot):
 
     def on_ready(self) -> None:
         print(f"Logged in as {self.user}")
+
+    # TODO: Maybe document these methods later?
+    async def setup_hook(self) -> None:
+        for extension in find_extensions_in("bot/extensions"):
+            await self.load_extension(extension)
+
+        await self.load_extension("jishaku")
+
+    async def get_context(
+        self,
+        origin: Union[Message, Interaction],
+        /,
+        *,
+        cls: Type[Context[Any]] = ErisContext,
+    ) -> Any:
+        return await super().get_context(origin, cls=cls)
