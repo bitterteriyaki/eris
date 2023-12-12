@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  bot:
+    image: eris-bot:dev
+    container_name: bot
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development_build
+      args:
+        - BOT_ENV=development
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+      cache_from:
+        - "eris-bot:dev"
+        - "eris-bot:latest"
+        - "*"
+    volumes:
+      - .:/bot
+    command: python manage.py runbot
