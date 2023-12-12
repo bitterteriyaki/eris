@@ -18,8 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from os import environ
 
 from discord import Intents
-from discord.ext.commands.bot import Bot
-
+from discord.ext.commands.bot import Bot  # type: ignore
 
 environ["JISHAKU_NO_UNDERSCORE"] = "true"
 environ["JISHAKU_NO_DM_TRACEBACK"] = "true"
@@ -32,4 +31,4 @@ class Eris(Bot):
         super().__init__(command_prefix="?", intents=Intents.all())
 
     def on_ready(self) -> None:
-        print(f"Logged in as {self.user} ({self.user.id})")
+        print(f"Logged in as {self.user}")

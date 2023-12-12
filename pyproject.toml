@@ -13,6 +13,31 @@ discord-py = "^2.3.2"
 jishaku = "^2.5.2"
 python-dotenv = "^1.0.0"
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+black = "^23.11.0"
+flake8 = "^6.1.0"
+pyright = "^1.1.339"
+isort = "^5.13.1"
+commitizen = "^3.13.0"
+
+[tool.black]
+color = true
+line-length = 79
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.commitizen]
+version = "0.1.0"
+version_files = ["pyproject.toml"]
+update_changelog_on_bump = true
+changelog_incremental = true
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
