@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from os import environ
 from typing import Any, Type, Union
 
+from aiohttp import ClientSession
 from discord import Intents, Interaction, Message
 from discord.ext.commands import Bot, Context  # type: ignore
 from jishaku.modules import find_extensions_in
@@ -31,11 +32,12 @@ environ["JISHAKU_NO_DM_TRACEBACK"] = "true"
 class Eris(Bot):
     """Main bot class. The magic happens here."""
 
-    def __init__(self) -> None:
-        super().__init__(command_prefix="?", intents=Intents.all())
+    __slots__ = ("session",)
 
-    def on_ready(self) -> None:
-        print(f"Logged in as {self.user}")
+    def __init__(self) -> None:
+        self.session = ClientSession()
+
+        super().__init__(command_prefix="?", intents=Intents.all())
 
     # TODO: Maybe document these methods later?
     async def setup_hook(self) -> None:

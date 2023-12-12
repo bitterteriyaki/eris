@@ -1,7 +1,7 @@
 # This Dockerfile uses multi-stage build to customize DEV and PROD images:
 # https://docs.docker.com/develop/develop-images/multistage-build/
 
-FROM python:3.12.1-slim-buster AS development_build
+FROM python:3.12.1-slim-bullseye AS development_build
 
 ARG BOT_ENV \
   UID=1000 \
