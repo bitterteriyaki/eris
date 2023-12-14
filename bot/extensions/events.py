@@ -15,7 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import cast
+
 from discord.ext.commands import Cog # type: ignore
+from discord import ClientUser
+from rich import print
+from rich.table import Table
+from rich.box import ROUNDED
 
 from bot.core import Eris
 
@@ -30,7 +36,21 @@ class Events(Cog):
 
     @Cog.listener()
     async def on_ready(self) -> None:
-        print(f"Logged in as {self.bot.user}.")
+        # At this point, :attr:`bot.user` is not ``None`` anymore, so we
+        # can safely cast it to :class:`discord.ClientUser` and avoid
+        # type errors.
+        user = cast(ClientUser, self.bot.user)
+
+        title = ":robot: | Bot Information"
+        informations = Table(title=title, box=ROUNDED, title_style="bold")
+
+        informations.add_column("ID", justify="center")
+        informations.add_column("Name", justify="center")
+        informations.add_column("Discriminator", justify="center")
+
+        informations.add_row(str(user.id), user.name, user.discriminator)
+
+        print(informations)
 
 
 async def setup(bot: Eris) -> None:

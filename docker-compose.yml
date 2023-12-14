@@ -4,6 +4,7 @@ services:
   bot:
     image: eris-bot:dev
     container_name: bot
+    tty: true
     build:
       context: .
       dockerfile: docker/Dockerfile
