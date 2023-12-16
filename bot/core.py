@@ -54,3 +54,7 @@ class Eris(Bot):
         cls: Type[Context[Any]] = ErisContext,
     ) -> Any:
         return await super().get_context(origin, cls=cls)
+
+    async def close(self) -> None:
+        await self.session.close()
+        await super().close()

@@ -17,15 +17,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
 from contextlib import contextmanager
-from logging import INFO, WARN, Formatter, getLogger
+from logging import INFO, WARN, Formatter, LogRecord, getLogger
 from logging.handlers import RotatingFileHandler
 from os import environ
 from typing import Generator
 
 from click import group
 from dotenv import load_dotenv
+from rich.logging import RichHandler
+from rich.text import Text
 
 from bot.core import Eris
+
+
+class StreamHandler(RichHandler):
+    """A custom logging handler with prettier output."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            omit_repeated_times=False,
+            rich_tracebacks=True,
+            tracebacks_show_locals=True,
+        )
+
+    def get_level_text(self, record: LogRecord) -> Text:
+        levelname = record.levelname
+        style = f"logging.level.{levelname.lower()}"
+        return Text.styled(f"[{levelname}]", style=style)
 
 
 @contextmanager
@@ -56,7 +74,9 @@ def setup_logging() -> Generator[None, None, None]:
         )
 
         handler.setFormatter(formatter)
+
         log.addHandler(handler)
+        log.addHandler(StreamHandler())
 
         yield
     finally:
@@ -71,10 +91,8 @@ def setup_logging() -> Generator[None, None, None]:
 async def run_bot() -> None:
     load_dotenv("config/.env")
 
-    token = environ["DISCORD_TOKEN"]
-
     async with Eris() as bot:
-        await bot.start(token)
+        await bot.start(environ["DISCORD_TOKEN"])
 
 
 @group()

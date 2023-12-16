@@ -20,9 +20,6 @@ from typing import cast
 
 from discord import ClientUser
 from discord.ext.commands import Cog  # type: ignore
-from rich import print
-from rich.box import ROUNDED
-from rich.table import Table
 
 from bot.core import Eris
 
@@ -43,18 +40,7 @@ class Events(Cog):
         # can safely cast it to :class:`discord.ClientUser` and avoid
         # type errors.
         user = cast(ClientUser, self.bot.user)
-
-        title = ":robot: | Bot Information"
-        informations = Table(title=title, box=ROUNDED, title_style="bold")
-
-        informations.add_column("ID", justify="center")
-        informations.add_column("Name", justify="center")
-        informations.add_column("Discriminator", justify="center")
-
-        informations.add_row(str(user.id), user.name, user.discriminator)
-
-        print(informations)
-        log.info(f"Bot is ready. Logged in as '{user}' (ID: {user.id}).")
+        log.info(f'Bot is ready. Logged in as "{user}" (ID: {user.id}).')
 
 
 async def setup(bot: Eris) -> None:
