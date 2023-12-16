@@ -15,15 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from logging import getLogger
 from typing import cast
 
-from discord.ext.commands import Cog # type: ignore
 from discord import ClientUser
+from discord.ext.commands import Cog  # type: ignore
 from rich import print
-from rich.table import Table
 from rich.box import ROUNDED
+from rich.table import Table
 
 from bot.core import Eris
+
+log = getLogger(__name__)
 
 
 class Events(Cog):
@@ -51,6 +54,7 @@ class Events(Cog):
         informations.add_row(str(user.id), user.name, user.discriminator)
 
         print(informations)
+        log.info(f"Bot is ready. Logged in as '{user}' (ID: {user.id}).")
 
 
 async def setup(bot: Eris) -> None:

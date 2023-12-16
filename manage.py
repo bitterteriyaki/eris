@@ -16,12 +16,56 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
+from contextlib import contextmanager
+from logging import INFO, WARN, Formatter, getLogger
+from logging.handlers import RotatingFileHandler
 from os import environ
+from typing import Generator
 
 from click import group
 from dotenv import load_dotenv
 
 from bot.core import Eris
+
+
+@contextmanager
+def setup_logging() -> Generator[None, None, None]:
+    log = getLogger()
+
+    try:
+        # __enter__
+        max_bytes = 32 * 1024 * 1024  # 32 MiB
+
+        getLogger("discord").setLevel(INFO)
+        getLogger("discord.http").setLevel(WARN)
+
+        log.setLevel(INFO)
+
+        datetime_format = "%Y-%m-%d %H:%M:%S"
+        log_format = "[{asctime}] [{levelname}] {name}: {message}"
+
+        handler = RotatingFileHandler(
+            filename="logs/eris.log",
+            encoding="utf-8",
+            mode="w",
+            maxBytes=max_bytes,
+            backupCount=5,
+        )
+        formatter = Formatter(
+            fmt=log_format, datefmt=datetime_format, style="{"
+        )
+
+        handler.setFormatter(formatter)
+        log.addHandler(handler)
+
+        yield
+    finally:
+        # __exit__
+        handlers = log.handlers[:]
+
+        for handler in handlers:
+            handler.close()
+            log.removeHandler(handler)
 
 
 async def run_bot() -> None:
@@ -41,7 +85,8 @@ def main() -> None:
 @main.command()
 def runbot() -> None:
     """Run the bot."""
-    asyncio.run(run_bot())
+    with setup_logging():
+        asyncio.run(run_bot())
 
 
 if __name__ == "__main__":
