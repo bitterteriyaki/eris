@@ -16,14 +16,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re
+from asyncio import to_thread
 from io import BytesIO
 from os.path import join
-from typing import Dict, Generator, List, Optional, Tuple, cast
+from typing import Any, Dict, Generator, List, Optional, Tuple, cast
 from zlib import decompressobj
 
+from discord import Message
 from discord.abc import Messageable
 from discord.app_commands import describe
-from discord.ext import commands
+from discord.ext.commands import Cog, hybrid_group  # type: ignore
 
 from bot.core import Eris, ErisContext
 from bot.utils.fuzzy import finder
@@ -32,7 +34,10 @@ RTFM_PAGES = {
     "stable": "https://discordpy.readthedocs.io/en/stable",
     "latest": "https://discordpy.readthedocs.io/en/latest",
     "python": "https://docs.python.org/3",
+    "djs": "https://discordjs.dev/docs/packages/discord.js/main",
 }
+
+DJS_MANIFEST = "https://docs.discordjs.dev/docs/discord.js/main.json"
 
 
 class SphinxObjectFileReader:
@@ -73,7 +78,7 @@ class SphinxObjectFileReader:
                 pos = buf.find(b"\n")
 
 
-class API(commands.Cog):
+class API(Cog):
     """Commands related to Discord's API."""
 
     __slots__ = ("bot", "_rtfm_cache")
@@ -138,31 +143,72 @@ class API(commands.Cog):
 
         return result
 
+    def parse_objects_json(self, data: Dict[str, Any]) -> Dict[str, str]:
+        result: Dict[str, str] = {}
+        base_url = RTFM_PAGES["djs"]
+
+        for cls in data["classes"]:
+            result[cls["name"]] = f"{base_url}/{cls['name']}"
+
+            try:
+                for method in cls["methods"]:
+                    name = f"{cls['name']}.{method['name']}"
+                    url = f"{base_url}/{cls['name']}#{method['name']}"
+                    result[name] = url
+            except KeyError:
+                pass
+
+            try:
+                for prop in cls["props"]:
+                    name = f"{cls['name']}.{prop['name']}"
+                    url = f"{base_url}/{cls['name']}#{prop['name']}"
+                    result[name] = url
+            except KeyError:
+                pass
+
+        for function in data["functions"]:
+            result[function["name"]] = f"{base_url}/{function['name']}"
+
+        return result
+
     async def build_rtfm_lookup_table(self) -> None:
         cache: Dict[str, Dict[str, str]] = {}
 
         for key, page in RTFM_PAGES.items():
             cache[key] = {}
 
-            async with self.bot.session.get(page + "/objects.inv") as resp:
-                if resp.status != 200:
-                    raise RuntimeError(
-                        "Cannot build RTFM lookup table, try again later."
-                    )
+            if key == "djs":
+                async with self.bot.session.get(DJS_MANIFEST) as resp:
+                    if resp.status != 200:
+                        raise RuntimeError(
+                            "Cannot build RTFM lookup table, try again later."
+                        )
 
-                stream = SphinxObjectFileReader(await resp.read())
-                cache[key] = self.parse_object_inv(stream, page)
+                    data = await resp.json()
+                    # This function can take a while to run, then we'll
+                    # offload it to a thread, so we don't block the
+                    # event loop.
+                    objects = await to_thread(self.parse_objects_json, data)
+                    cache[key] = objects
+            else:
+                async with self.bot.session.get(page + "/objects.inv") as resp:
+                    if resp.status != 200:
+                        raise RuntimeError(
+                            "Cannot build RTFM lookup table, try again later."
+                        )
+
+                    stream = SphinxObjectFileReader(await resp.read())
+                    cache[key] = self.parse_object_inv(stream, page)
 
         self._rtfm_cache = cache
 
     async def do_rtfm(
         self, ctx: ErisContext, key: str, entity: Optional[str] = None
-    ) -> None:
+    ) -> Optional[Message]:
         if entity is None:
-            await ctx.reply(
+            return await ctx.reply(
                 f"Click [here]({RTFM_PAGES[key]}) to view the documentation."
             )
-            return
 
         if not hasattr(self, "_rtfm_cache"):
             await ctx.typing()
@@ -190,13 +236,11 @@ class API(commands.Cog):
         )
 
         if len(matches) == 0:
-            await ctx.reply("Could not find anything. Sorry.")
-            return
+            return await ctx.reply("Could not find anything. Sorry.")
 
-        content = "\n".join(f"[`{key}`]({url})" for key, url in matches)
-        await ctx.reply(content)
+        await ctx.reply("\n".join(f"[`{key}`]({url})" for key, url in matches))
 
-    @commands.hybrid_group(aliases=["rtfd"], fallback="stable")
+    @hybrid_group(aliases=["rtfd"], fallback="stable")
     @describe(entity="The object to search for.")
     async def rtfm(
         self, ctx: ErisContext, *, entity: Optional[str] = None
@@ -204,11 +248,27 @@ class API(commands.Cog):
         """Gives you a documentation link for a discord.py entity."""
         await self.do_rtfm(ctx, "stable", entity)
 
+    @rtfm.command(name="latest", aliases=["dev"])
+    @describe(entity="The object to search for.")
+    async def rtfm_latest(
+        self, ctx: ErisContext, *, entity: Optional[str] = None
+    ) -> None:
+        """Gives you a documentation link for a discord.py entity."""
+        await self.do_rtfm(ctx, "latest", entity)
+
+    @rtfm.command(name="djs")
+    @describe(entity="The object to search for.")
+    async def rtfm_djs(
+        self, ctx: ErisContext, *, entity: Optional[str] = None
+    ) -> None:
+        """Gives you a documentation link for a discord.js entity."""
+        await self.do_rtfm(ctx, "djs", entity)
+
     @rtfm.command(name="python", aliases=["py"])
     @describe(entity="The object to search for.")
     async def rtfm_python(
         self, ctx: ErisContext, *, entity: Optional[str] = None
-    ):
+    ) -> None:
         """Gives you a documentation link for a Python entity."""
         await self.do_rtfm(ctx, "python", entity)
 
