@@ -152,6 +152,9 @@ class API(Cog):
 
             try:
                 for method in cls["methods"]:
+                    if method["name"].startswith("_"):
+                        continue
+
                     name = f"{cls['name']}.{method['name']}"
                     url = f"{base_url}/{cls['name']}#{method['name']}"
                     result[name] = url
@@ -160,14 +163,14 @@ class API(Cog):
 
             try:
                 for prop in cls["props"]:
+                    if prop["name"].startswith("_"):
+                        continue
+
                     name = f"{cls['name']}.{prop['name']}"
                     url = f"{base_url}/{cls['name']}#{prop['name']}"
                     result[name] = url
             except KeyError:
                 pass
-
-        for function in data["functions"]:
-            result[function["name"]] = f"{base_url}/{function['name']}"
 
         return result
 
