@@ -158,10 +158,7 @@ class API(Cog):
                     name = f"{cls['name']}.{method['name']}"
                     url = f"{base_url}/{cls['name']}#{method['name']}"
                     result[name] = url
-            except KeyError:
-                pass
 
-            try:
                 for prop in cls["props"]:
                     if prop["name"].startswith("_"):
                         continue
@@ -171,6 +168,9 @@ class API(Cog):
                     result[name] = url
             except KeyError:
                 pass
+
+        for func in data["functions"]:
+            result[func["name"]] = f"{base_url}/{func['name']}"
 
         return result
 
