@@ -19,7 +19,7 @@ from typing import Optional
 from unicodedata import name as get_unicode_name
 
 from discord import Message
-from discord.ext.commands import Cog, command  # type: ignore
+from discord.ext.commands import Cog, hybrid_command  # type: ignore
 
 from bot.core import Eris
 from bot.utils.context import ErisContext
@@ -33,7 +33,7 @@ class Meta(Cog):
     def __init__(self, bot: Eris) -> None:
         self.bot = bot
 
-    @command()
+    @hybrid_command()
     async def charinfo(
         self, ctx: ErisContext, *, characters: str
     ) -> Optional[Message]:
