@@ -6,9 +6,9 @@ documentation sources.
 
 ## Installation
 
-1. Clone this repository: `git clone https://github.com/squarecloudofc/helper-bot-discord`
-2. Navigate to the project directory: `cd eris-discord-rtfm-bot`
-3. Install the required dependencies: `poetry install`
+1. Clone this repository: `git clone https://github.com/bitterteriyaki/eris`
+2. Navigate to the project directory: `cd eris`
+3. Install the required dependencies: `poetry install --no-root`
 
 ## Contributing
 
@@ -17,4 +17,4 @@ discuss what you would like to change.
 
 ## License
 
-[Eris is licensed under the GPL](https://choosealicense.com/licenses/gpl-3.0/)
+[Eris is licensed under the AGPL](https://www.gnu.org/licenses/agpl-3.0.en.html)
